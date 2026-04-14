@@ -15,6 +15,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Create Namespace
+        run: |
+          kubectl apply -f templates/namespace.yaml
+
       - name: Configure TLS secret reflection
         run: |
           # Get current reflection namespaces and add monitoring if not already there
@@ -62,7 +66,6 @@ jobs:
 
       - name: Apply ArgoCD Application
         run: |
-          kubectl apply -f templates/namespace.yaml
           kubectl apply -f templates/storageclass.yaml
           kubectl apply -f templates/sealed-secret.yaml
           kubectl apply -f templates/argocd.yaml
