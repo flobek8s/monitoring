@@ -70,10 +70,13 @@ jobs:
           kubectl apply -f templates/sealed-secret.yaml
           kubectl apply -f templates/argocd.yaml
 
-      - name: Apply all ArgoCD Applications
-        run: |
-          kubectl apply -f templates/
-          echo "Applications created/updated. ArgoCD will sync automatically."
+      # - name: Apply all ArgoCD Applications
+      #   run: |
+      #     kubectl apply -f templates/
+      #     echo "Applications created/updated. ArgoCD will sync automatically."
+
+      - name: Sync ArgoCD
+        run: argocd app sync monitoring
 
       # - name: Wait for ArgoCD sync
       #     run: |
@@ -84,9 +87,9 @@ jobs:
       #         --auth-token ${{ secrets.ARGOCD_TOKEN }} \
       #         --insecure
 
-      - name: Apply Dashboards
-        run: |
-          kubectl apply -f dashboards/traefik-dashboard.yaml
+      # - name: Apply Dashboards
+      #   run: |
+      #     kubectl apply -f dashboards/traefik-dashboard.yaml
 
       # - name: Set up kubectl
       #   uses: azure/setup-kubectl@v3

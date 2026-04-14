@@ -1,4 +1,8 @@
 kube-prometheus-stack:
+
+  crds:
+    enabled: true
+    
   # ── Grafana ──────────────────────────────────────────────
   grafana:
     grafana.ini:
