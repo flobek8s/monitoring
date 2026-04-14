@@ -10,7 +10,7 @@ spec:
     - match: Host(`prom.phink8s.com`)
       kind: Rule
       services:
-        - name: monitoring-kube-prometheus-stack-prometheus
+        - name: monitoring-kube-prometheus-prometheus
           port: 9090
   tls:
     secretName: wildcard-phink8s.com-tls
