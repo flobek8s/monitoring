@@ -66,17 +66,21 @@ jobs:
 
       - name: Apply ArgoCD Application
         run: |
-          kubectl apply -f templates/storageclass.yaml
-          kubectl apply -f templates/sealed-secret.yaml
           kubectl apply -f templates/argocd.yaml
+
+      # - name: Apply ArgoCD Application
+      #   run: |
+      #     kubectl apply -f templates/storageclass.yaml
+      #     kubectl apply -f templates/sealed-secret.yaml
+      #     kubectl apply -f templates/argocd.yaml
 
       # - name: Apply all ArgoCD Applications
       #   run: |
       #     kubectl apply -f templates/
       #     echo "Applications created/updated. ArgoCD will sync automatically."
 
-      - name: Sync ArgoCD
-        run: argocd app sync monitoring
+      # - name: Sync ArgoCD
+      #   run: argocd app sync monitoring
 
       # - name: Wait for ArgoCD sync
       #     run: |
