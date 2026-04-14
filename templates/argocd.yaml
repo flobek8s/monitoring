@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/flobek8s/monitoring
     targetRevision: main
-    path: apps/monitoring
+    path: .
     helm:
       valueFiles:
         - values.yaml

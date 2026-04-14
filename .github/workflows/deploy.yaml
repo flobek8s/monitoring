@@ -1,4 +1,4 @@
-name: Sync Monitoring Stack
+name: Sync-Monitoring-Stack
 
 on:
   push:
