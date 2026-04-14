@@ -1,0 +1,112 @@
+name: Sync Monitoring Stack
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '/templates/**'
+      - '/dashboard/**'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: [flobek8s-runners]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure TLS secret reflection
+        run: |
+          # Get current reflection namespaces and add monitoring if not already there
+          CURRENT=$(kubectl get secret wildcard-phink8s.com-tls -n traefik \
+            -o jsonpath='{.metadata.annotations.reflector\.v1\.k8s\.emberstack\.com/reflection-allowed-namespaces}' \
+            2>/dev/null || echo "")
+
+          if echo "$CURRENT" | grep -q "monitoring"; then
+            echo "monitoring already in reflection namespaces, skipping"
+          else
+            # Append monitoring to existing namespaces
+            if [ -z "$CURRENT" ]; then
+              NEW_NS="monitoring"
+            else
+              NEW_NS="${CURRENT},monitoring"
+            fi
+
+            kubectl patch secret wildcard-phink8s.com-tls -n traefik \
+              --type=merge \
+              -p "{
+                \"metadata\": {
+                  \"annotations\": {
+                    \"reflector.v1.k8s.emberstack.com/reflection-allowed\": \"true\",
+                    \"reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces\": \"${NEW_NS}\",
+                    \"reflector.v1.k8s.emberstack.com/reflection-auto-enabled\": \"true\",
+                    \"reflector.v1.k8s.emberstack.com/reflection-auto-namespaces\": \"${NEW_NS}\"
+                  }
+                }
+              }"
+            echo "Added monitoring to reflection namespaces: ${NEW_NS}"
+          fi
+
+          # Wait for the reflected secret to appear
+          echo "Waiting for TLS secret to reflect into monitoring..."
+          for i in $(seq 1 20); do
+            if kubectl get secret wildcard-phink8s.com-tls -n monitoring > /dev/null 2>&1; then
+              echo "TLS secret reflected successfully"
+              break
+            fi
+            echo "Attempt $i/20 - waiting..."
+            sleep 3
+          done
+          kubectl get secret wildcard-phink8s.com-tls -n monitoring \
+            || { echo "TLS secret never appeared in monitoring"; exit 1; }
+
+      - name: Apply ArgoCD Application
+        run: |
+          kubectl apply -f templates/namespace.yaml
+          kubectl apply -f templates/storageclass.yaml
+          kubectl apply -f templates/sealed-secret.yaml
+          kubectl apply -f templates/argocd.yaml
+
+      - name: Apply all ArgoCD Applications
+              run: |
+                kubectl apply -f templates/
+                echo "Applications created/updated. ArgoCD will sync automatically."
+
+      # - name: Wait for ArgoCD sync
+      #     run: |
+      #       kubectl -n argocd wait --for=condition=Available \
+      #         deployment/argocd-server --timeout=120s
+      #       argocd app wait monitoring --timeout 300 \
+      #         --server ${{ secrets.ARGOCD_SERVER }} \
+      #         --auth-token ${{ secrets.ARGOCD_TOKEN }} \
+      #         --insecure
+
+      - name: Apply Dashboards
+        run: |
+          kubectl apply -f dashboards/traefik-dashboard.yaml
+
+      # - name: Set up kubectl
+      #   uses: azure/setup-kubectl@v3
+      #   with:
+      #     version: 'latest'
+
+      # - name: Configure kubeconfig
+      #   run: |
+      #     mkdir -p ~/.kube
+      #     echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
+      #     chmod 600 ~/.kube/config
+
+      # - name: Apply ArgoCD Application
+      #   run: |
+      #     kubectl apply -f apps/monitoring/templates/namespace.yaml
+      #     kubectl apply -f apps/monitoring/templates/sealed-secret.yaml
+      #     kubectl apply -f apps/monitoring/templates/argocd-app.yaml
+
+      # - name: Wait for ArgoCD sync
+      #   run: |
+      #     kubectl -n argocd wait --for=condition=Available \
+      #       deployment/argocd-server --timeout=120s
+      #     argocd app wait monitoring --timeout 300 \
+      #       --server ${{ secrets.ARGOCD_SERVER }} \
+      #       --auth-token ${{ secrets.ARGOCD_TOKEN }} \
+      #       --insecure

@@ -1,0 +1,13 @@
+apiVersion: v2
+name: monitoring
+description: Kube-Prometheus-Stack with Grafana, Prometheus, Alertmanager
+type: application
+version: 1.0.0
+
+dependencies:
+  - name: kube-prometheus-stack
+    version: "83.4.1"
+    repository: https://prometheus-community.github.io/helm-charts
+
+# Find Current Version Here:
+# https://artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack

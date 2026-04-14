@@ -1,0 +1,89 @@
+kube-prometheus-stack:
+  # ── Grafana ──────────────────────────────────────────────
+  grafana:
+    grafana.ini:
+      server:
+        root_url: https://grafana.flobek8s.com
+      auth.anonymous:
+        enabled: false
+
+    enabled: true
+    adminPassword: "AgBB9xL4PeaQKzi6igLBcm0e0dXVPruBOi+hD84Qogj1YWv81ezf9o3reheECoxo7ibHIPEyDWld1Z3ZklKB7EjKXgmb+qMYey4D/7LuiVMvn7MVdkTFNXCjTWk2Dwz8uIjmLROqEZFoBW3Lx8VJKLS0pAQJdVUMac7ubfbknnuGYZDEQE9LHO//WTX7oXTRkefYQE1XVQeDwC3lkjSKxbubWyyUopu2cGVuG9L/GpE6gs1kCpk6gyse21/VskvQs79SkWJwX2OZKSlygwmxtyWEU4V5b6pPZc04wU0+ymtRLbpjpglDvN4GagqnG6hZoBsnu1WMLsOetGz7leDSBytNhTH61JC+IuhRgcKGD4fJl0MAhfLvdg0Ebwcz3qMpxAlyDpKAkDcP5za+xgIq5MgqDAugF9Gq9kdMQvqbZD4i4DZtqHJRm+KEfgxHjhdcFKN0aFUmab/IkDKyrC19QviMlII1kKGBrybZHUZCgo/PWUGwOC0374Lo/zNI38gRNQO27ZpFh9jd3T5h9WNyhsY++fEyQ0B89fMxblQyRw940nrqyCqf9JADatnVLOXzdd0cdAlIvVYJCzoGQpg7ySLcaKfjWvomZwnBwPK3xX5T0qnozf1fKDJRFcz+zJ0s6mmWUqPD6Ohx0fNzw5rMafM8jQSXJTPagCzbV92pxQKDZvIczj9wCoTNRPEmNBKctn5mt5sMtHyh"
+    admin:
+      existingSecret: grafana-admin-secret
+      userKey: admin-user
+      passwordKey: admin-password
+
+    persistence:
+      enabled: true
+      type: pvc
+      storageClassName: nfs-csi-monitoring
+      accessModes:
+        - ReadWriteMany
+      size: 10Gi
+
+    ingress:
+      enabled: false 
+
+    sidecar:
+      dashboards:
+        enabled: true
+
+  # ── Prometheus ───────────────────────────────────────────
+  prometheus:
+    prometheusSpec:
+      retention: 15d
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: nfs-csi-monitoring
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 20Gi
+      # pick up ServiceMonitors from all namespaces
+      serviceMonitorSelectorNilUsesHelmValues: false
+      serviceMonitorSelector: {}
+      serviceMonitorNamespaceSelector: {}
+      podMonitorSelector: {}
+      podMonitorNamespaceSelector: {}
+
+    ingress:
+      enabled: false
+
+  # ── Alertmanager ─────────────────────────────────────────
+  alertmanager:
+    alertmanagerSpec:
+      storage:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: nfs-csi-monitoring
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 2Gi
+    ingress:
+      enabled: false
+
+  # ── Node Exporter ─────────────────────────────────────────
+  nodeExporter:
+    enabled: true
+
+  # ── kube-state-metrics ───────────────────────────────────
+  kubeStateMetrics:
+    enabled: true
+
+  # ── Talos-specific: some internal kubelets use self-signed certs
+  kubelet:
+    serviceMonitor:
+      https: true
+      insecureSkipVerify: true
+
+  kubeControllerManager:
+    enabled: false             # Talos: not exposed by default
+  kubeScheduler:
+    enabled: false             # Talos: not exposed by default
+  kubeEtcd:
+    enabled: false             # Talos: managed internally
+  kubeProxy:
+    enabled: false             # Talos: uses kube-router / Cilium typically

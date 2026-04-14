@@ -1,0 +1,17 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-csi-monitoring
+provisioner: nfs.csi.k8s.io
+parameters:
+  server: "192.168.20.47"
+  share: "/srv/k8s"
+  subDir: "monitoring"
+  mountPermissions: "0777"
+reclaimPolicy: Retain
+volumeBindingMode: Immediate
+allowVolumeExpansion: true
+mountOptions:
+  - nfsvers=4.1
+  - hard
+  - intr
