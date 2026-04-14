@@ -68,9 +68,9 @@ jobs:
           kubectl apply -f templates/argocd.yaml
 
       - name: Apply all ArgoCD Applications
-              run: |
-                kubectl apply -f templates/
-                echo "Applications created/updated. ArgoCD will sync automatically."
+        run: |
+          kubectl apply -f templates/
+          echo "Applications created/updated. ArgoCD will sync automatically."
 
       # - name: Wait for ArgoCD sync
       #     run: |
