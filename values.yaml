@@ -33,6 +33,14 @@ kube-prometheus-stack:
       dashboards:
         enabled: true
 
+    readinessProbe:
+        initialDelaySeconds: 60   # or higher
+        timeoutSeconds: 10
+        periodSeconds: 10
+    livenessProbe:
+        initialDelaySeconds: 60
+        timeoutSeconds: 10
+
   # ── Prometheus ───────────────────────────────────────────
   prometheus:
     prometheusSpec:
@@ -54,6 +62,14 @@ kube-prometheus-stack:
 
     ingress:
       enabled: false
+
+    readinessProbe:
+        initialDelaySeconds: 60   # or higher
+        timeoutSeconds: 10
+        periodSeconds: 10
+    livenessProbe:
+        initialDelaySeconds: 60
+        timeoutSeconds: 10
 
   # ── Alertmanager ─────────────────────────────────────────
   alertmanager:
